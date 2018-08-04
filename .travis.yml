@@ -1,0 +1,77 @@
+language: node_js
+sudo: required # to install newer g++ and use docker
+dist: trusty # https://github.com/travis-ci/travis-ci/issues/5448
+services:
+  - docker
+matrix:
+  include:
+    - node_js: "4.2"
+    - node_js: "0.12"
+    - node_js: "0.11"
+    - node_js: "0.10"
+    - node_js: "0.12"
+      env: SAUCE=true
+    - node_js: "4.2"
+      env: INTEGRATION=true
+before_install:
+- npm install -g npm@'>=2.13.5'
+script:
+- |
+  echo "machine github.com login stellar-jenkins password $GITHUB_TOKEN" >~/.netrc
+  git config --global user.name "Travis CI"
+  git config --global user.email "travis@stellar.org"
+  if [ "${SAUCE}" = "true" ]; then
+    if [ "${TRAVIS_PULL_REQUEST}" = "false" ]; then
+      gulp test:sauce
+    else
+      echo "Pull request - skip Sauce Labs testing..."
+    fi
+  elif [ "${INTEGRATION}" = "true" ]; then
+    docker run -p 127.0.0.1:8000:8000 -d --name=stellar-core-horizon stellar/stellar-core-horizon:latest
+    # Ugly but it's the only way to make istanbul generate coverage report
+    babel-node ./node_modules/gulp/bin/gulp.js test:integration
+  else
+    gulp test:unit
+  fi
+after_success:
+- |
+  # Send report to coveralls but only once
+  if [ "${INTEGRATION}" = "true" ] && [ "${TRAVIS_BRANCH}" = "master" ] ; then
+    gulp submit-coverage
+  fi
+env:
+  global:
+    # GITHUB_TOKEN
+    - secure: Pc3DwkXywnOGAhUdBZiUCKjyljzrQzPoqm9EEr+UL2BaeaDniFLCLEkuU+ViiuJBo8oPyOIl7I+d86Mi5q06fQx55+xH7DmiW/aj4qKVB2U6Ghn6A3QWkQuvRB1o8SP7iTYRCX480ULZs6AGrMd9y1PFRx/L93fBrO+J/bOtEmg=
+    - CXX=g++-4.8 # node bindings in 4.0.0
+addons:
+  apt:
+    sources:
+    - ubuntu-toolchain-r-test
+    packages:
+    - gcc-4.8
+    - g++-4.8
+notifications:
+  slack:
+    secure: CgXxNEQrQ82EatyF/wSdF0P5rXcWPL+fFZ1lb1aBb8RbVt5gwddJ6xWVD/nYSr6tIJvIYHYhoYsIDPENwezIPsesG7kWXerQhydsEcA34JKxzsStd/TmU6Moxuwy6KTN7yzmL6586nSvoAw9TNPgvRkJFkH07asjGIc9Rlaq7/Y=
+before_deploy: gulp build
+after_deploy: ./after_deploy.sh
+deploy:
+  - provider: npm
+    email: npm@stellar.org
+    api_key:
+      secure: rQ9OjPbd/6yAgjILpYI4cdrPYPEUvEv/aJF1KrT42KlukLn5jrSGVzuhdVCtv2riNOvxkLFQEzv/Q/DhsB2tJ0nhiad/S21IIaqGmvWZjIUKOHUz91ncEcMDqAMKR1tBGjmtA3J25xbbyPBNFwDRsyNbhjWV2F4iS0Xc9f4abyY=
+    skip_cleanup: true
+    on:
+      tags: true
+      repo: stellar/js-stellar-sdk
+      node: "4.2"
+      condition: "$INTEGRATION = true"
+  - provider: script
+    script: ./bower_publish.sh
+    skip_cleanup: true
+    on:
+      tags: true
+      repo: stellar/js-stellar-sdk
+      node: "4.2"
+      condition: "$INTEGRATION = true"
