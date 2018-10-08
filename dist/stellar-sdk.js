@@ -5577,9 +5577,11 @@ var StellarSdk =
 
 	var _sale_antes_call_builder = __webpack_require__(567);
 
+	var _contract_call_builder = __webpack_require__(568);
+
 	var _config = __webpack_require__(6);
 
-	var _reviewable_requestsReviewable_requests_helper = __webpack_require__(568);
+	var _reviewable_requestsReviewable_requests_helper = __webpack_require__(569);
 
 	var _timeSyncer = __webpack_require__(473);
 
@@ -5587,7 +5589,7 @@ var StellarSdk =
 
 	var _tokendJsBase2 = _interopRequireDefault(_tokendJsBase);
 
-	var _lodashIsUndefined = __webpack_require__(578);
+	var _lodashIsUndefined = __webpack_require__(581);
 
 	var _lodashIsUndefined2 = _interopRequireDefault(_lodashIsUndefined);
 
@@ -5595,12 +5597,12 @@ var StellarSdk =
 
 	var _const2 = _interopRequireDefault(_const);
 
-	var _key_value_call_builder = __webpack_require__(579);
+	var _key_value_call_builder = __webpack_require__(582);
 
 	var axios = __webpack_require__(478);
 	var toBluebird = __webpack_require__(505).resolve;
 	var URI = __webpack_require__(474);
-	var querystring = __webpack_require__(580);
+	var querystring = __webpack_require__(583);
 
 	var Server = (function () {
 	    /**
@@ -5677,12 +5679,15 @@ var StellarSdk =
 	         */
 	    }, {
 	        key: "submitOperationGroup",
-	        value: function submitOperationGroup(operations, sourceID, signerKP) {
+	        value: function submitOperationGroup(operations, sourceID, signerKP, maxTotalFee) {
 	            var source = new _tokendJsBase2["default"].Account(sourceID);
 	            var transactionBuilder = new _tokendJsBase2["default"].TransactionBuilder(source);
 	            operations.forEach(function (operation) {
 	                return transactionBuilder.addOperation(operation);
 	            });
+	            if (maxTotalFee) {
+	                transactionBuilder.addMaxTotalFee(maxTotalFee);
+	            }
 	            var transaction = transactionBuilder.build();
 	            transaction.sign(signerKP);
 	            return this.submitTransaction(transaction);
@@ -5749,6 +5754,16 @@ var StellarSdk =
 	                }
 	            });
 	            return toBluebird(promise);
+	        }
+
+	        /**
+	         * Returns new {@link PublicInfoCallBuilder} object configured by a current Horizon server configuration.
+	         * @returns {PublicInfoCallBuilder}
+	         */
+	    }, {
+	        key: "public",
+	        value: function _public() {
+	            return new _public_info_call_builder.PublicInfoCallBuilder(URI(this.serverURL));
 	        }
 
 	        /**
@@ -6019,6 +6034,16 @@ var StellarSdk =
 	        key: "documents",
 	        value: function documents() {
 	            return new _document_call_builder.DocumentCallBuilder(URI(this.serverURL));
+	        }
+
+	        /**
+	         * Returns new {@link ContractCallBuilder} object configured with the current Horizon server configuration.
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: "contracts",
+	        value: function contracts() {
+	            return new _contract_call_builder.ContractCallBuilder(URI(this.serverURL));
 	        }
 
 	        /**
@@ -6366,6 +6391,12 @@ var StellarSdk =
 	    key: 'accountId',
 	    value: function accountId(id) {
 	      this.filter.push(['accounts', id]);
+	      return this;
+	    }
+	  }, {
+	    key: 'fees',
+	    value: function fees(accountId) {
+	      this.filter.push(['accounts', accountId, 'fees']);
 	      return this;
 	    }
 	  }, {
@@ -65355,6 +65386,24 @@ var StellarSdk =
 	            this.filter.push(['public', 'operations', operationId]);
 	            return this;
 	        }
+	    }, {
+	        key: 'payments',
+	        value: function payments() {
+	            this.filter.push(['public', 'payments']);
+	            return this;
+	        }
+	    }, {
+	        key: 'forAsset',
+	        value: function forAsset(asset) {
+	            this.url.addQuery('asset', asset);
+	            return this;
+	        }
+	    }, {
+	        key: 'ledgers',
+	        value: function ledgers() {
+	            this.filter.push(['public', 'ledgers']);
+	            return this;
+	        }
 	    }]);
 
 	    return PublicInfoCallBuilder;
@@ -65911,6 +65960,162 @@ var StellarSdk =
 /* 568 */
 /***/ (function(module, exports, __webpack_require__) {
 
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _call_builder = __webpack_require__(118);
+
+	var ContractCallBuilder = (function (_CallBuilder) {
+	    _inherits(ContractCallBuilder, _CallBuilder);
+
+	    /**
+	     * Creates a new {@link ContractCallBuilder} pointed to server defined by serverUrl.
+	     *
+	     * Do not create this object directly, use {@link Server#contracts}.
+	     * @constructor
+	     * @extends CallBuilder
+	     * @param {string} serverUrl Horizon server URL.
+	     */
+
+	    function ContractCallBuilder(serverUrl) {
+	        _classCallCheck(this, ContractCallBuilder);
+
+	        _get(Object.getPrototypeOf(ContractCallBuilder.prototype), 'constructor', this).call(this, serverUrl);
+	        this.url.segment('contracts');
+	    }
+
+	    /**
+	     * Provides information on a single contract.
+	     * @param {string} id Contract ID
+	     * @returns {ContractCallBuilder}
+	     */
+
+	    _createClass(ContractCallBuilder, [{
+	        key: 'contract',
+	        value: function contract(id) {
+	            this.filter.push(['contracts', id.toString()]);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contracts filters requests where start time
+	         * equal or more than passed value
+	         * @param {string} startTime like `1234567892`
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'forStartTime',
+	        value: function forStartTime(startTime) {
+	            this.url.addQuery('start_time', startTime);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contracts filters requests where end time
+	         * equal or more than passed value
+	         * @param {string} endTime like `1234567892`
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'forEndTime',
+	        value: function forEndTime(endTime) {
+	            this.url.addQuery('end_time', endTime);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contracts filtered by disputing state
+	         * @param {string} isDisputing like true
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'byDisputingState',
+	        value: function byDisputingState(isDisputing) {
+	            this.url.addQuery('disputing', isDisputing);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contracts filtered by completed state
+	         * @param {string} isCompleted like true
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'byCompletedState',
+	        value: function byCompletedState(isCompleted) {
+	            this.url.addQuery('completed', isCompleted);
+	            return this;
+	        }
+
+	        /**
+	         * Filters contracts by counterparty
+	         * @param {string} counterpartyID For example: `GDRYPVZ63SR7V2G46GKRGABJD3XPDNWQ4B4PQPJBTTDUEAKH5ZECPTSN`
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'forCounterparty',
+	        value: function forCounterparty(counterpartyID) {
+	            this.url.addQuery('counterparty', counterpartyID);
+	            return this;
+	        }
+
+	        /**
+	         * Filters contracts by source
+	         * @param {string} sourceID For example: `GDRYPVZ63SR7V2G46GKRGABJD3XPDNWQ4B4PQPJBTTDUEAKH5ZECPTSN`
+	         * @returns {ContractRequestsCallBuilder}
+	         */
+	    }, {
+	        key: 'forSource',
+	        value: function forSource(sourceID) {
+	            this.url.addQuery('source', sourceID);
+	            return this;
+	        }
+
+	        /**
+	         * Filters contracts by contract number
+	         * @param {string} contractNumber For example: `123456`
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'forContractNumber',
+	        value: function forContractNumber(contractNumber) {
+	            this.url.addQuery('contract_number', contractNumber);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contracts filtered by escrow ID
+	         * @param {string} escrowID like `GDGQVOKHW4VEJRU2TETD6DBRKEO5ERCNF353LW5WBFW3JJWQ2BRQ6KDD`
+	         * @returns {ContractCallBuilder}
+	         */
+	    }, {
+	        key: 'byEscrowID',
+	        value: function byEscrowID(escrowID) {
+	            this.url.addQuery('escrow_id', escrowID);
+	            return this;
+	        }
+	    }]);
+
+	    return ContractCallBuilder;
+	})(_call_builder.CallBuilder);
+
+	exports.ContractCallBuilder = ContractCallBuilder;
+
+/***/ }),
+/* 569 */
+/***/ (function(module, exports, __webpack_require__) {
+
 	"use strict";
 
 	Object.defineProperty(exports, "__esModule", {
@@ -65921,23 +66126,27 @@ var StellarSdk =
 
 	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError("Cannot call a class as a function"); } }
 
-	var _asset_requests_call_builder = __webpack_require__(569);
+	var _asset_requests_call_builder = __webpack_require__(570);
 
-	var _preissuance_requests_call_builder = __webpack_require__(571);
+	var _preissuance_requests_call_builder = __webpack_require__(572);
 
-	var _issuance_requests_call_builder = __webpack_require__(572);
+	var _issuance_requests_call_builder = __webpack_require__(573);
 
-	var _withdrawal_requests_call_builder = __webpack_require__(573);
+	var _withdrawal_requests_call_builder = __webpack_require__(574);
 
-	var _sales_requests_call_builder = __webpack_require__(574);
+	var _sales_requests_call_builder = __webpack_require__(575);
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
-	var _limits_update_requests_call_builder = __webpack_require__(575);
+	var _limits_update_requests_call_builder = __webpack_require__(576);
 
-	var _update_kyc_requests_call_builder = __webpack_require__(576);
+	var _update_kyc_requests_call_builder = __webpack_require__(577);
 
-	var _update_sale_details_requests_call_builder = __webpack_require__(577);
+	var _update_sale_details_requests_call_builder = __webpack_require__(578);
+
+	var _contract_requests_call_builder = __webpack_require__(579);
+
+	var _invoice_requests_call_builder = __webpack_require__(580);
 
 	var URI = __webpack_require__(474);
 
@@ -66057,6 +66266,26 @@ var StellarSdk =
 	        value: function update_sale_end_time() {
 	            return new UpdateSaleEndTimeRequestCallBuilder(URI(this.serverURL));
 	        }
+
+	        /**
+	         * Returns new {@link ContractRequestsCallBuilder} object configured by a current Horizon server configuration.
+	         * @returns {ContractRequestsCallBuilder}
+	         */
+	    }, {
+	        key: "contracts",
+	        value: function contracts() {
+	            return new _contract_requests_call_builder.ContractRequestsCallBuilder(URI(this.serverURL));
+	        }
+
+	        /**
+	         * Returns new {@link InvoiceRequestsCallBuilder} object configured by a current Horizon server configuration.
+	         * @returns {InvoiceRequestsCallBuilder}
+	         */
+	    }, {
+	        key: "invoices",
+	        value: function invoices() {
+	            return new _invoice_requests_call_builder.InvoiceRequestsCallBuilder(URI(this.serverURL));
+	        }
 	    }]);
 
 	    return ReviewableRequestsHelper;
@@ -66065,7 +66294,7 @@ var StellarSdk =
 	exports.ReviewableRequestsHelper = ReviewableRequestsHelper;
 
 /***/ }),
-/* 569 */
+/* 570 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66082,7 +66311,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var AssetRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(AssetRequestsCallBuilder, _ReviewableRequestCallBuilder);
@@ -66123,7 +66352,7 @@ var StellarSdk =
 	exports.AssetRequestsCallBuilder = AssetRequestsCallBuilder;
 
 /***/ }),
-/* 570 */
+/* 571 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66222,7 +66451,7 @@ var StellarSdk =
 	exports.ReviewableRequestCallBuilder = ReviewableRequestCallBuilder;
 
 /***/ }),
-/* 571 */
+/* 572 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66239,7 +66468,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var PreissuanceRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(PreissuanceRequestsCallBuilder, _ReviewableRequestCallBuilder);
@@ -66280,7 +66509,7 @@ var StellarSdk =
 	exports.PreissuanceRequestsCallBuilder = PreissuanceRequestsCallBuilder;
 
 /***/ }),
-/* 572 */
+/* 573 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66297,7 +66526,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var IssuanceRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(IssuanceRequestsCallBuilder, _ReviewableRequestCallBuilder);
@@ -66338,7 +66567,7 @@ var StellarSdk =
 	exports.IssuanceRequestsCallBuilder = IssuanceRequestsCallBuilder;
 
 /***/ }),
-/* 573 */
+/* 574 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66355,7 +66584,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var WithdrawalRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(WithdrawalRequestsCallBuilder, _ReviewableRequestCallBuilder);
@@ -66396,7 +66625,7 @@ var StellarSdk =
 	exports.WithdrawalRequestsCallBuilder = WithdrawalRequestsCallBuilder;
 
 /***/ }),
-/* 574 */
+/* 575 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66413,7 +66642,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var SaleRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(SaleRequestsCallBuilder, _ReviewableRequestCallBuilder);
@@ -66454,7 +66683,7 @@ var StellarSdk =
 	exports.SaleRequestsCallBuilder = SaleRequestsCallBuilder;
 
 /***/ }),
-/* 575 */
+/* 576 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66471,7 +66700,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var LimitsUpdateRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(LimitsUpdateRequestsCallBuilder, _ReviewableRequestCallBuilder);
@@ -66512,7 +66741,7 @@ var StellarSdk =
 	exports.LimitsUpdateRequestsCallBuilder = LimitsUpdateRequestsCallBuilder;
 
 /***/ }),
-/* 576 */
+/* 577 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66529,7 +66758,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var UpdateKYCRequestCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(UpdateKYCRequestCallBuilder, _ReviewableRequestCallBuilder);
@@ -66570,7 +66799,7 @@ var StellarSdk =
 	exports.UpdateKYCRequestCallBuilder = UpdateKYCRequestCallBuilder;
 
 /***/ }),
-/* 577 */
+/* 578 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -66585,7 +66814,7 @@ var StellarSdk =
 
 	function _inherits(subClass, superClass) { if (typeof superClass !== "function" && superClass !== null) { throw new TypeError("Super expression must either be null or a function, not " + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
 
-	var _reviewable_request_call_builder = __webpack_require__(570);
+	var _reviewable_request_call_builder = __webpack_require__(571);
 
 	var UpdateSaleDetailsRequestCallBuilder = (function (_ReviewableRequestCallBuilder) {
 	    _inherits(UpdateSaleDetailsRequestCallBuilder, _ReviewableRequestCallBuilder);
@@ -66612,7 +66841,149 @@ var StellarSdk =
 	exports.UpdateSaleDetailsRequestCallBuilder = UpdateSaleDetailsRequestCallBuilder;
 
 /***/ }),
-/* 578 */
+/* 579 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _reviewable_request_call_builder = __webpack_require__(571);
+
+	var ContractRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
+	    _inherits(ContractRequestsCallBuilder, _ReviewableRequestCallBuilder);
+
+	    /**
+	     * Creates a new {@link ContractRequestsCallBuilder} pointed to server defined by serverUrl.
+	     *
+	     * Do not create this object directly, use {@link Server#reviewableRequestsHelper#contracts}.
+	     * @constructor
+	     * @extends ReviewableRequestCallBuilder
+	     * @param {string} serverUrl Horizon server URL.
+	     */
+
+	    function ContractRequestsCallBuilder(serverUrl) {
+	        _classCallCheck(this, ContractRequestsCallBuilder);
+
+	        _get(Object.getPrototypeOf(ContractRequestsCallBuilder.prototype), 'constructor', this).call(this, serverUrl);
+	        this.url.segment('request/contracts');
+	    }
+
+	    /**
+	     * Filters contract requests by contract number
+	     * @param {string} contractNumber For example: `123456`
+	     * @returns {ContractRequestsCallBuilder}
+	     */
+
+	    _createClass(ContractRequestsCallBuilder, [{
+	        key: 'forContractNumber',
+	        value: function forContractNumber(contractNumber) {
+	            this.url.addQuery('contract_number', contractNumber);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contract requests filters requests where start time
+	         * equal or more than passed value
+	         * @param {string} startTime like `1234567892`
+	         * @returns {ContractRequestsCallBuilder}
+	         */
+	    }, {
+	        key: 'forStartTime',
+	        value: function forStartTime(startTime) {
+	            this.url.addQuery('start_time', startTime);
+	            return this;
+	        }
+
+	        /**
+	         * This endpoint represents contract requests filters requests where end time
+	         * equal or more than passed value
+	         * @param {string} endTime like `1234567892`
+	         * @returns {ContractRequestsCallBuilder}
+	         */
+	    }, {
+	        key: 'forEndTime',
+	        value: function forEndTime(endTime) {
+	            this.url.addQuery('end_time', endTime);
+	            return this;
+	        }
+	    }]);
+
+	    return ContractRequestsCallBuilder;
+	})(_reviewable_request_call_builder.ReviewableRequestCallBuilder);
+
+	exports.ContractRequestsCallBuilder = ContractRequestsCallBuilder;
+
+/***/ }),
+/* 580 */
+/***/ (function(module, exports, __webpack_require__) {
+
+	'use strict';
+
+	Object.defineProperty(exports, '__esModule', {
+	    value: true
+	});
+
+	var _createClass = (function () { function defineProperties(target, props) { for (var i = 0; i < props.length; i++) { var descriptor = props[i]; descriptor.enumerable = descriptor.enumerable || false; descriptor.configurable = true; if ('value' in descriptor) descriptor.writable = true; Object.defineProperty(target, descriptor.key, descriptor); } } return function (Constructor, protoProps, staticProps) { if (protoProps) defineProperties(Constructor.prototype, protoProps); if (staticProps) defineProperties(Constructor, staticProps); return Constructor; }; })();
+
+	var _get = function get(_x, _x2, _x3) { var _again = true; _function: while (_again) { var object = _x, property = _x2, receiver = _x3; _again = false; if (object === null) object = Function.prototype; var desc = Object.getOwnPropertyDescriptor(object, property); if (desc === undefined) { var parent = Object.getPrototypeOf(object); if (parent === null) { return undefined; } else { _x = parent; _x2 = property; _x3 = receiver; _again = true; desc = parent = undefined; continue _function; } } else if ('value' in desc) { return desc.value; } else { var getter = desc.get; if (getter === undefined) { return undefined; } return getter.call(receiver); } } };
+
+	function _classCallCheck(instance, Constructor) { if (!(instance instanceof Constructor)) { throw new TypeError('Cannot call a class as a function'); } }
+
+	function _inherits(subClass, superClass) { if (typeof superClass !== 'function' && superClass !== null) { throw new TypeError('Super expression must either be null or a function, not ' + typeof superClass); } subClass.prototype = Object.create(superClass && superClass.prototype, { constructor: { value: subClass, enumerable: false, writable: true, configurable: true } }); if (superClass) Object.setPrototypeOf ? Object.setPrototypeOf(subClass, superClass) : subClass.__proto__ = superClass; }
+
+	var _reviewable_request_call_builder = __webpack_require__(571);
+
+	var InvoiceRequestsCallBuilder = (function (_ReviewableRequestCallBuilder) {
+	    _inherits(InvoiceRequestsCallBuilder, _ReviewableRequestCallBuilder);
+
+	    /**
+	     * Creates a new {@link InvoiceRequestsCallBuilder} pointed to server defined by serverUrl.
+	     *
+	     * Do not create this object directly, use {@link Server#reviewableRequestsHelper#invoices}.
+	     * @constructor
+	     * @extends ReviewableRequestCallBuilder
+	     * @param {string} serverUrl Horizon server URL.
+	     */
+
+	    function InvoiceRequestsCallBuilder(serverUrl) {
+	        _classCallCheck(this, InvoiceRequestsCallBuilder);
+
+	        _get(Object.getPrototypeOf(InvoiceRequestsCallBuilder.prototype), 'constructor', this).call(this, serverUrl);
+	        this.url.segment('request/invoices');
+	    }
+
+	    /**
+	     * Filters contract invoices
+	     * @param {string} contractID For example: `12`
+	     * @returns {InvoiceRequestsCallBuilder}
+	     */
+
+	    _createClass(InvoiceRequestsCallBuilder, [{
+	        key: 'forContractID',
+	        value: function forContractID(contractID) {
+	            this.url.addQuery('contract_id', contractID);
+	            return this;
+	        }
+	    }]);
+
+	    return InvoiceRequestsCallBuilder;
+	})(_reviewable_request_call_builder.ReviewableRequestCallBuilder);
+
+	exports.InvoiceRequestsCallBuilder = InvoiceRequestsCallBuilder;
+
+/***/ }),
+/* 581 */
 /***/ (function(module, exports) {
 
 	/**
@@ -66640,7 +67011,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 579 */
+/* 582 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
@@ -66675,13 +67046,13 @@ var StellarSdk =
 	        _classCallCheck(this, KeyValueCallBuilder);
 
 	        _get(Object.getPrototypeOf(KeyValueCallBuilder.prototype), 'constructor', this).call(this, serverUrl);
-	        this.url.segment('keyvalue');
+	        this.url.segment('key_value');
 	    }
 
 	    _createClass(KeyValueCallBuilder, [{
 	        key: 'keyValueByKey',
 	        value: function keyValueByKey(key) {
-	            this.filter.push(['keyvalue', key]);
+	            this.filter.push(['key_value', key]);
 	            return this;
 	        }
 	    }]);
@@ -66692,17 +67063,17 @@ var StellarSdk =
 	exports.KeyValueCallBuilder = KeyValueCallBuilder;
 
 /***/ }),
-/* 580 */
+/* 583 */
 /***/ (function(module, exports, __webpack_require__) {
 
 	'use strict';
 
-	exports.decode = exports.parse = __webpack_require__(581);
-	exports.encode = exports.stringify = __webpack_require__(582);
+	exports.decode = exports.parse = __webpack_require__(584);
+	exports.encode = exports.stringify = __webpack_require__(585);
 
 
 /***/ }),
-/* 581 */
+/* 584 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
@@ -66788,7 +67159,7 @@ var StellarSdk =
 
 
 /***/ }),
-/* 582 */
+/* 585 */
 /***/ (function(module, exports) {
 
 	// Copyright Joyent, Inc. and other Node contributors.
