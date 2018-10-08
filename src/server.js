@@ -25,6 +25,7 @@ import { TransactionCallBuilder } from "./transaction_call_builder";
 import { UserCallBuilder } from "./user_call_builder";
 import { SalesCallBuilder } from "./sales_call_builder";
 import { SaleAntesCallBuilder } from "./sale_antes_call_builder";
+import { ContractCallBuilder } from "./contract_call_builder";
 import { Config } from "./config";
 import { ReviewableRequestsHelper } from "./reviewable_requests/reviewable_requests_helper";
 import { TimeSyncer } from './time-syncer';
@@ -104,10 +105,14 @@ export class Server {
      * @param {Base.Keypair} signerKP - The keypair of the source account signer.
      * @return {Promise}
      */
-    submitOperationGroup (operations, sourceID, signerKP) {
+    submitOperationGroup (operations, sourceID, signerKP, maxTotalFee) {
       const source = new stellarBase.Account(sourceID);
       const transactionBuilder = new stellarBase.TransactionBuilder(source);
-      operations.forEach(operation => transactionBuilder.addOperation(operation));
+      operations
+          .forEach(operation => transactionBuilder.addOperation(operation));
+      if (maxTotalFee) {
+        transactionBuilder.addMaxTotalFee(maxTotalFee);
+      }
       const transaction = transactionBuilder.build();
       transaction.sign(signerKP);
       return this.submitTransaction(transaction);
@@ -174,6 +179,14 @@ export class Server {
               }
             });
       return toBluebird(promise);
+    }
+
+    /**
+     * Returns new {@link PublicInfoCallBuilder} object configured by a current Horizon server configuration.
+     * @returns {PublicInfoCallBuilder}
+     */
+    public() {
+        return new PublicInfoCallBuilder(URI(this.serverURL));
     }
 
     /**
@@ -390,6 +403,14 @@ export class Server {
      */
     documents() {
         return new DocumentCallBuilder(URI(this.serverURL));
+    }
+
+    /**
+     * Returns new {@link ContractCallBuilder} object configured with the current Horizon server configuration.
+     * @returns {ContractCallBuilder}
+     */
+    contracts() {
+        return new ContractCallBuilder(URI(this.serverURL));
     }
 
     /**
