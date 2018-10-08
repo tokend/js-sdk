@@ -83,7 +83,7 @@
         "eventsource": "^0.2.1",
         "jsdoc": "^3.4.1",
         "lodash": "^4.0.1",
-        "tokend-js-base": "https://github.com/tokend/js-base.git",
+        "tokend-js-base": "https://github.com/tokend/js-base.git#dd33cb201c2dfec5f6e1e1ad221670785b3e1f41",
         "toml": "^2.3.0",
         "urijs": "^1.19.1"
     }

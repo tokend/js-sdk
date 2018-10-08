@@ -15,4 +15,19 @@ export class PublicInfoCallBuilder extends CallBuilder {
         this.filter.push(['public', 'operations', operationId]);
         return this;
     }
+
+    payments() {
+        this.filter.push(['public', 'payments']);
+        return this;
+    }
+
+    forAsset(asset) {
+        this.url.addQuery('asset', asset);
+        return this;
+    }
+
+    ledgers() {
+        this.filter.push(['public', 'ledgers']);
+        return this;
+    }
 }
