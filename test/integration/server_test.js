@@ -5,6 +5,7 @@ import * as assetHelper from '../../scripts/helpers/asset'
 import * as accountHelper from '../../scripts/helpers/accounts'
 import * as withdrawHelper from '../../scripts/helpers/withdraw'
 import * as saleHelper from '../../scripts/helpers/sale'
+import * as investmentTokenSaleHelper from '../../scripts/helpers/investment_token_sale';
 import * as offerHelper from '../../scripts/helpers/offer'
 import * as limitsUpdateHelper from '../../scripts/helpers/limits_update'
 import * as payoutHelper from '../../scripts/helpers/payout'
@@ -1090,6 +1091,112 @@ describe("Integration test", function () {
             .then(() => feesHelper.setFees(testHelper, StellarSdk.xdr.FeeType.payoutFee(), "10", "10", otherAssetCode))
             .then(() => accountHelper.loadBalanceIDForAsset(testHelper, syndicateKP.accountId(), otherAssetCode))
             .then(balanceID => payoutHelper.performPayout(testHelper, syndicateKP, assetCode, balanceID, "500", "1", "1", "10", "50"))
+            .then(() => done())
+            .catch(helpers.errorHandler);
+    });
+
+    it("Investment token sale", function (done) {
+        let syndicateKP = StellarSdk.Keypair.random();
+        let investmentToken = "INVES7TOKEN" + Math.floor(Math.random() * 10000);
+        let newInvestmentToken = "NEW1TOKEN" + Math.floor(Math.random() * 10000);
+        let amountToBeSold = "10";
+        let defaultRedemptionAsset = "REDEMPTION" + Math.floor(Math.random() * 10000);
+        let quoteAssets = [
+            {price: "3", asset: "XRP" + Math.floor(Math.random() * 10000)},
+            {price: "10", asset: "LTC" + Math.floor(Math.random() * 10000)},
+            {price: "2", asset: "ETH" + Math.floor(Math.random() * 1000)}
+        ];
+        let settlementAssets = [
+            {price: quoteAssets[0].price, code: quoteAssets[0].asset},
+            {price: quoteAssets[1].price, code: quoteAssets[1].asset},
+            {price: quoteAssets[2].price, code: quoteAssets[2].asset},
+            {price: "5", code: defaultRedemptionAsset},
+            {price: "1", code: newInvestmentToken}
+        ];
+        let saleKey = manageKeyValueHelper.makeITSaleKey(syndicateKP, investmentToken);
+
+        let participant1KP = StellarSdk.Keypair.random();
+        let participant2KP = StellarSdk.Keypair.random();
+        let participant3KP = StellarSdk.Keypair.random();
+
+        let date;
+        let tradingStartDate;
+        let settlementStartDate;
+        let settlementEndDate;
+
+        let investmentTokenSaleID;
+
+        //console.log("Begin test preparations: " + Math.floor(date.getTime() / 1000).toString());
+        accountHelper.createNewAccount(testHelper, syndicateKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0)
+            .then(() => accountHelper.createNewAccount(testHelper, participant1KP.accountId(), StellarSdk.xdr.AccountType.general().value, 0))
+            .then(() => accountHelper.createNewAccount(testHelper, participant2KP.accountId(), StellarSdk.xdr.AccountType.verified().value, 0))
+            .then(() => accountHelper.createNewAccount(testHelper, participant3KP.accountId(), StellarSdk.xdr.AccountType.verified().value, 0))
+            .then(() => {
+                date = new Date();
+                let expirationDate = Math.floor(date.getTime() / 1000 + 115);
+                console.log("Create investment token: " + Math.floor(date.getTime() / 1000));
+                assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), investmentToken, 0, amountToBeSold, amountToBeSold, expirationDate.toString())
+            })
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), quoteAssets[0].asset, 0, "1000", "1000"))
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), quoteAssets[1].asset, 0, "1000", "1000"))
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), quoteAssets[2].asset, 0, "1000", "1000"))
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), defaultRedemptionAsset, 0, "1000", "1000"))
+            .then(() => assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), newInvestmentToken, 0, "10000", "10000"))
+            .then(() => manageKeyValueHelper.putKeyValue(testHelper, testHelper.master, saleKey, "1", StellarSdk.xdr.KeyValueEntryType.uint32().value))
+            .then(() => {
+                date = new Date();
+                tradingStartDate = Math.floor(date.getTime() / 1000 + 10);
+                settlementStartDate = tradingStartDate + 10;
+                settlementEndDate = settlementStartDate + 40;
+                return investmentTokenSaleHelper.createSaleCreationRequest(testHelper, syndicateKP, investmentToken,
+                    amountToBeSold, quoteAssets, tradingStartDate.toString(), settlementStartDate.toString(),
+                    settlementEndDate.toString(), quoteAssets[1].asset);
+            })
+            .then(requestID => investmentTokenSaleHelper.cancelSaleCreationRequest(testHelper, syndicateKP, requestID))
+            .then(requestID => reviewableRequestHelper.loadNotPendingRequest(testHelper, requestID, syndicateKP))
+            .then(response => {
+                expect(response.request_state).to.be.equal("canceled");
+            })
+            .then(() => issuanceHelper.fundAccount(testHelper, participant1KP, quoteAssets[0].asset, testHelper.master, "500"))
+            .then(() => issuanceHelper.fundAccount(testHelper, participant2KP, quoteAssets[1].asset, testHelper.master, "500"))
+            .then(() => issuanceHelper.fundAccount(testHelper, participant3KP, quoteAssets[2].asset, testHelper.master, "500"))
+            .then(() => issuanceHelper.fundAccount(testHelper, syndicateKP, defaultRedemptionAsset, testHelper.master, "800"))
+            .then(() => issuanceHelper.fundAccount(testHelper, syndicateKP, newInvestmentToken, syndicateKP, "1000"))
+            .then(() => {
+                date = new Date();
+                tradingStartDate = Math.floor(date.getTime() / 1000 + 10);
+                settlementStartDate = tradingStartDate + 10;
+                settlementEndDate = settlementStartDate + 40;
+                console.log("Investment token sale created at " + tradingStartDate - 10);
+                return investmentTokenSaleHelper.createAndReviewSaleCreationRequest(testHelper, syndicateKP,
+                    investmentToken, amountToBeSold, quoteAssets, tradingStartDate.toString(),
+                    settlementStartDate.toString(), settlementEndDate.toString(), defaultRedemptionAsset, 1);
+            })
+            .then(saleID => {
+                console.log("first log");
+                investmentTokenSaleID = saleID;
+                return accountHelper.loadBalanceIDForAsset(testHelper, participant1KP.accountId(), quoteAssets[0].asset);
+            })
+            .then(balanceID => {
+                date = new Date();
+                console.log("Begin creating sale participations: " + Math.floor(date.getTime() / 1000).toString());
+                investmentTokenSaleHelper.createSaleParticipation(testHelper, participant1KP, investmentTokenSaleID, balanceID, "3")
+            })
+            .then(() => accountHelper.loadBalanceIDForAsset(testHelper, participant2KP.accountId(), quoteAssets[1].asset))
+            .then(balanceID => investmentTokenSaleHelper.createSaleParticipation(testHelper, participant2KP, investmentTokenSaleID, balanceID, "3"))
+            .then(() => accountHelper.loadBalanceIDForAsset(testHelper, participant3KP.accountId(), quoteAssets[2].asset))
+            .then(balanceID => investmentTokenSaleHelper.createSaleParticipation(testHelper, participant3KP, investmentTokenSaleID, balanceID, "3"))
+            .then(() => investmentTokenSaleHelper.createProlongationSettlementOption(testHelper, participant1KP, investmentTokenSaleID))
+            .then(optionID => investmentTokenSaleHelper.removeSettlementOption(testHelper, participant1KP, optionID))
+            .then(() => investmentTokenSaleHelper.createProlongationSettlementOption(testHelper, participant2KP, investmentTokenSaleID))
+            .then(() => investmentTokenSaleHelper.createRedemptionSettlementOption(testHelper, participant3KP, investmentTokenSaleID, quoteAssets[2].asset))
+
+            .then(() => {
+                date = new Date();
+                console.log("Begin performing settlement: " + Math.floor(date.getTime() / 1000).toString());
+                return investmentTokenSaleHelper.performSettlement(testHelper, syndicateKP, investmentTokenSaleID,
+                    newInvestmentToken, settlementAssets);
+            })
             .then(() => done())
             .catch(helpers.errorHandler);
     });

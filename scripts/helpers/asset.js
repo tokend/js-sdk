@@ -2,7 +2,8 @@ var reviewableRequestHelper = require('./review_request')
 const StellarSdk = require('../../lib/index');
 
 
-function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy = 0, maxIssuanceAmount = "100000000", initialPreissuedAmount = "0") {
+function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy = 0, maxIssuanceAmount = "100000000",
+                                    initialPreissuedAmount = "0", expirationDate) {
     console.log(assetCode, maxIssuanceAmount)
     let opts = {
         requestID: "0",
@@ -19,7 +20,7 @@ function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy
                 type: "logo_type",
             },
         },
-
+        expirationDate: expirationDate
     };
     let operation = StellarSdk.ManageAssetBuilder.assetCreationRequest(opts);
     return testHelper.server.submitOperationGroup([operation], owner.accountId(), owner);
@@ -44,8 +45,10 @@ function createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy =
     return testHelper.server.submitOperationGroup([operation], owner.accountId(), owner);
 }
 
-function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount = "0") {
-    return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount)
+function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount = "0",
+                     expirationDate) {
+    return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount,
+        initialPreissuedAmount, expirationDate)
         .then(response => {
             var result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
             var success = result.result().results()[0].tr().manageAssetResult().success()
@@ -53,7 +56,8 @@ function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAm
                 return 'Asset created'
             }
             var id = success.requestId().toString();
-            return reviewableRequestHelper.reviewRequest(testHelper, id, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, "");
+            return reviewableRequestHelper.reviewRequest(testHelper, id, testHelper.master,
+                StellarSdk.xdr.ReviewRequestOpAction.approve().value, "");
         }).then(res => {
             console.log(assetCode, ' <-- Asset successfully created');
             return res;

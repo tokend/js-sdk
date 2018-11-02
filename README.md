@@ -11,12 +11,12 @@
 
 It provides:
 - a networking layer API for Horizon endpoints.
-- facilities for building and signing transactions for communicating with  Horizon instance and for submitting transactions or querying network history.
+- facilities for building and signing transactions, for communicating with the Horizon instance, and for submitting transactions or querying network history.
 
 
-> **Warning!** Node version of `js-base` (`js-sdk` dependency) package is using [`ed25519`](https://www.npmjs.com/package/ed25519) package, a native implementation of [Ed25519](https://ed25519.cr.yp.to/) in Node.js, as an [optional dependency](https://docs.npmjs.com/files/package.json#optionaldependencies). This means that if for any reason installation of this package fails, `js-base` (and `js-sdk`) will fallback to much slower implementation contained in [`tweetnacl`](https://www.npmjs.com/package/tweetnacl).
+> **Warning!** Node version of `js-base` (`js-sdk` dependency) package is using [`ed25519`](https://www.npmjs.com/package/ed25519) package, a native implementation of [Ed25519](https://ed25519.cr.yp.to/) in Node.js, as an [optional dependency](https://docs.npmjs.com/files/package.json#optionaldependencies). This means that if for any reason installation of this package fails, `js-base` (and `js-sdk`) will fallback to the much slower implementation contained in [`tweetnacl`](https://www.npmjs.com/package/tweetnacl).
 >
-> If you are using `js-sdk`/`js-base` in a browser you can ignore this. However, for production backend deployments you should definitely be using `ed25519`. If `ed25519` is successfully installed and working `StellarSdk.FastSigning` variable will be equal `true`. Otherwise, it will be `false`.
+> If you are using `js-sdk`/`js-base` in a browser you can ignore this. However, for production backend deployments you should definitely be using `ed25519`. If `ed25519` is successfully installed and working `StellarSdk.FastSigning` variable will be equal `true`. Otherwise it will be `false`.
 
 ### Branches
 
@@ -28,7 +28,7 @@ It provides:
 
 #### Help! I'm having trouble installing the SDK on Windows
 
-Unfortunately, the Stellar platform development team mostly works on OS X and Linux, and so sometimes bugs creep through that are specific to Windows.  When installing js-sdk on windows, you might see an error that looks similar to the following:
+Unfortunately, the Stellar platform development team mostly works on OS X and Linux, and so sometimes bugs creep through that are specific to windows.  When installing js-sdk on windows, you might see an error that looks similar to the following:
 
 ```shell
 error MSB8020: The build tools for v120 (Platform Toolset = 'v120 ') cannot be found. To build using the v120 build tools, please install v120 build tools.  Alternatively, you may upgrade to the current Visual Studio tools by selecting the Project menu or right-click the solution, and then selecting "Retarget solution"

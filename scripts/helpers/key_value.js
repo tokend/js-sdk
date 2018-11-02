@@ -17,7 +17,12 @@ function deleteKeyValue(testHelper, source, key) {
     return testHelper.server.submitOperationGroup([operation], source.accountId(), source);
 }
 
+function makeITSaleKey() {
+    return "investment_token_sale_creation_tasks";
+}
+
 module.exports = {
     putKeyValue,
-    deleteKeyValue
+    deleteKeyValue,
+    makeITSaleKey
 };

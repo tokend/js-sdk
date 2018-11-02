@@ -3,6 +3,7 @@ import {PreissuanceRequestsCallBuilder} from "./preissuance_requests_call_builde
 import {IssuanceRequestsCallBuilder} from "./issuance_requests_call_builder";
 import {WithdrawalRequestsCallBuilder} from "./withdrawal_requests_call_builder";
 import {SaleRequestsCallBuilder} from "./sales_requests_call_builder";
+import {InvestmentTokenSaleRequestsCallBuilder} from "./investment_token_sale_requests_call_builder";
 import {ReviewableRequestCallBuilder} from "./reviewable_request_call_builder";
 import {LimitsUpdateRequestsCallBuilder} from "./limits_update_requests_call_builder";
 import {UpdateKYCRequestCallBuilder} from './update_kyc_requests_call_builder';
@@ -64,6 +65,14 @@ export class ReviewableRequestsHelper {
      */
     sales() {
         return new SaleRequestsCallBuilder(URI(this.serverURL));
+    }
+
+    /**
+     * Returns new {@link InvestmentTokenSaleRequestsCallBuilder} object configured by a current Horizon server configuration.
+     * @returns {InvestmentTokenSaleRequestsCallBuilder}
+     */
+    investmentTokenSaleRequests() {
+        return new InvestmentTokenSaleRequestsCallBuilder(URI(this.serverURL));
     }
 
     /**

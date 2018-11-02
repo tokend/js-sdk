@@ -26,6 +26,7 @@ import { UserCallBuilder } from "./user_call_builder";
 import { SalesCallBuilder } from "./sales_call_builder";
 import { SaleAntesCallBuilder } from "./sale_antes_call_builder";
 import { ContractCallBuilder } from "./contract_call_builder";
+import { InvestmentTokenSalesCallBuilder } from "./investment_token_sales_call_builder";
 import { Config } from "./config";
 import { ReviewableRequestsHelper } from "./reviewable_requests/reviewable_requests_helper";
 import { TimeSyncer } from './time-syncer';
@@ -34,6 +35,7 @@ import stellarBase from 'tokend-js-base';
 import isUndefined from 'lodash/isUndefined';
 import constants from './const';
 import {KeyValueCallBuilder} from "./key_value_call_builder";
+import {SettlementOptionsCallBuilder} from "./settlement_options_call_builder";
 
 let axios = require("axios");
 let toBluebird = require("bluebird").resolve;
@@ -214,6 +216,14 @@ export class Server {
     }
 
     /**
+     * Returns new {@link SettlementOptionsCallBuilder} object configured by a current Horizon server configuration.
+     * @returns {SettlementOptionsCallBuilder}
+     */
+    settlementOptions() {
+        return new SettlementOptionsCallBuilder(URI(this.serverURL));
+    }
+
+    /**
      * Returns new {@link ContactRequestCallBuilder} object configured by a current Horizon server configuration.
      * @returns {ContactRequestCallBuilder}
      */
@@ -235,6 +245,14 @@ export class Server {
      */
     sales() {
         return new SalesCallBuilder(URI(this.serverURL));
+    }
+
+    /**
+     * Returns new {@link InvestmentTokenSalesCallBuilder} object configured by a current Horizon server configuration.
+     * @returns {InvestmentTokenSalesCallBuilder}
+     */
+    investmentTokenSales() {
+        return new InvestmentTokenSalesCallBuilder(URI(this.serverURL));
     }
 
     /**
