@@ -36,6 +36,7 @@ import isUndefined from 'lodash/isUndefined';
 import constants from './const';
 import {KeyValueCallBuilder} from "./key_value_call_builder";
 import {SettlementOptionsCallBuilder} from "./settlement_options_call_builder";
+import { HistoryOffersCallBuilder } from "./history_offers";
 
 let axios = require("axios");
 let toBluebird = require("bluebird").resolve;
@@ -309,6 +310,10 @@ export class Server {
      */
     paymentRequests() {
         return new PaymentRequestCallBuilder(URI(this.serverURL));
+    }
+
+    historyOffers() {
+        return new HistoryOffersCallBuilder(URI(this.serverURL));
     }
 
     /**
