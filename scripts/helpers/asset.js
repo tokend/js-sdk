@@ -2,7 +2,9 @@ var reviewableRequestHelper = require('./review_request')
 const StellarSdk = require('../../lib/index');
 
 
-function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy = 0, maxIssuanceAmount = "100000000", initialPreissuedAmount = "0") {
+function createAssetCreationRequest(testHelper, owner, issuer, assetCode,
+                                    policy = 0, maxIssuanceAmount = "100000000",
+                                    initialPreissuedAmount = "0", trailingDigitsCount = "6") {
     console.log(assetCode, maxIssuanceAmount)
     let opts = {
         requestID: "0",
@@ -19,7 +21,7 @@ function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy
                 type: "logo_type",
             },
         },
-
+        trailingDigitsCount: trailingDigitsCount,
     };
     let operation = StellarSdk.ManageAssetBuilder.assetCreationRequest(opts);
     return testHelper.server.submitOperationGroup([operation], owner.accountId(), owner);
@@ -44,8 +46,8 @@ function createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy =
     return testHelper.server.submitOperationGroup([operation], owner.accountId(), owner);
 }
 
-function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount = "0") {
-    return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount)
+function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount = "0", trailingDigitsCount = "6") {
+    return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount, trailingDigitsCount)
         .then(response => {
             var result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
             var success = result.result().results()[0].tr().manageAssetResult().success()
