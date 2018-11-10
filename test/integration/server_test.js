@@ -1095,6 +1095,7 @@ describe("Integration test", function () {
             .catch(helpers.errorHandler);
     });
 
+    // FIXME: try to be within appropriate periods (trading_start_date - settlement_start_date - settlement_end_date)
     it("Investment token sale", function (done) {
         let syndicateKP = StellarSdk.Keypair.random();
         let investmentToken = "INVES7TOKEN" + Math.floor(Math.random() * 10000);
@@ -1126,7 +1127,6 @@ describe("Integration test", function () {
 
         let investmentTokenSaleID;
 
-        //console.log("Begin test preparations: " + Math.floor(date.getTime() / 1000).toString());
         accountHelper.createNewAccount(testHelper, syndicateKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0)
             .then(() => accountHelper.createNewAccount(testHelper, participant1KP.accountId(), StellarSdk.xdr.AccountType.general().value, 0))
             .then(() => accountHelper.createNewAccount(testHelper, participant2KP.accountId(), StellarSdk.xdr.AccountType.verified().value, 0))
@@ -1170,7 +1170,7 @@ describe("Integration test", function () {
                 console.log("Investment token sale created at " + tradingStartDate - 10);
                 return investmentTokenSaleHelper.createAndReviewSaleCreationRequest(testHelper, syndicateKP,
                     investmentToken, amountToBeSold, quoteAssets, tradingStartDate.toString(),
-                    settlementStartDate.toString(), settlementEndDate.toString(), defaultRedemptionAsset, 1);
+                    settlementStartDate.toString(), settlementEndDate.toString(), defaultRedemptionAsset, 1, false);
             })
             .then(saleID => {
                 console.log("first log");

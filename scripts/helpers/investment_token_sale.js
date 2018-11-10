@@ -4,7 +4,7 @@ let reviewableRequestHelper = require('./review_request');
 function createSaleCreationRequest(testHelper, owner, baseAsset, amountToBeSold,
                                    quoteAssets, tradingStartDate,
                                    settlementStartDate, settlementEndDate,
-                                   defaultRedemptionAsset) {
+                                   defaultRedemptionAsset, isProlongationAllowed = true) {
     let opts = {
         baseAsset: baseAsset,
         amountToBeSold: amountToBeSold,
@@ -22,6 +22,7 @@ function createSaleCreationRequest(testHelper, owner, baseAsset, amountToBeSold,
         settlementStartDate: settlementStartDate,
         settlementEndDate: settlementEndDate,
         defaultRedemptionAsset: defaultRedemptionAsset,
+        isProlongationAllowed: isProlongationAllowed,
     };
     let op = StellarSdk.ManageInvestmentTokenSaleCreationRequestBuilder
         .createITSaleCreationRequest(opts);
@@ -37,10 +38,10 @@ function createSaleCreationRequest(testHelper, owner, baseAsset, amountToBeSold,
 function createAndReviewSaleCreationRequest(testHelper, owner, baseAsset, amountToBeSold,
                                             quoteAssets, tradingStartDate,
                                             settlementStartDate, settlementEndDate,
-                                            defaultRedemptionAsset, taskToRemove = 0) {
+                                            defaultRedemptionAsset, taskToRemove = 0, isProlongationAllowed = true) {
     return createSaleCreationRequest(testHelper, owner, baseAsset, amountToBeSold,
-        quoteAssets, tradingStartDate, settlementStartDate, settlementEndDate,
-        defaultRedemptionAsset)
+        quoteAssets, tradingStartDate, settlementStartDate, settlementEndDate, defaultRedemptionAsset,
+        isProlongationAllowed)
         .then(requestID => reviewableRequestHelper.reviewRequest(testHelper, requestID, testHelper.master,
             StellarSdk.xdr.ReviewRequestOpAction.approve().value, "", undefined, 0, taskToRemove))
         .then(response => {
@@ -58,7 +59,7 @@ function createAndReviewSaleCreationRequest(testHelper, owner, baseAsset, amount
 function updateSaleCreationRequest(testHelper, requestID, owner, baseAsset,
                                    amountToBeSold, quoteAssets, tradingStartDate,
                                    settlementStartDate, settlementEndDate,
-                                   defaultRedemptionAsset) {
+                                   defaultRedemptionAsset, isProlongationAllowed = true) {
     let opts = {
         requestID: requestID,
         baseAsset: baseAsset,
@@ -77,6 +78,7 @@ function updateSaleCreationRequest(testHelper, requestID, owner, baseAsset,
         settlementStartDate: settlementStartDate,
         settlementEndDate: settlementEndDate,
         defaultRedemptionAsset: defaultRedemptionAsset,
+        isProlongationAllowed: isProlongationAllowed,
     };
     let op = StellarSdk.ManageInvestmentTokenSaleCreationRequestBuilder
         .updateITSaleCreationRequest(opts);
