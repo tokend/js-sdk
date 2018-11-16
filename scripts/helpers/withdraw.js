@@ -1,6 +1,6 @@
 const StellarSdk = require('../../lib/index');
 
-function withdraw(testHelper, source, balance, amount, destAsset) {
+function withdraw(testHelper, source, balance, amount, destAsset, allTasks) {
     // TODO add fees calculations and convert to destAsset
     const opts = {
         balance: balance,
@@ -11,7 +11,8 @@ function withdraw(testHelper, source, balance, amount, destAsset) {
         },
         externalDetails: { a: "some external details" },
         destAsset: destAsset,
-        expectedDestAssetAmount: amount
+        expectedDestAssetAmount: amount,
+        allTasks: allTasks
     };
     const operation = StellarSdk.CreateWithdrawRequestBuilder.createWithdrawWithAutoConversion(opts);
     return testHelper.server.submitOperationGroup([operation], source.accountId(), source)

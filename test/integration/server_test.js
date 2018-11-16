@@ -121,6 +121,46 @@ describe("Integration test", function () {
                 done(err)
             });
     });
+    it("Create and withdraw asset with tasks", function (done) {
+        var assetCode = "USD" + Math.floor(Math.random() * 1000);
+        var assetPolicy = StellarSdk.xdr.AssetPolicy.transferable().value | StellarSdk.xdr.AssetPolicy.withdrawable().value;
+        var preIssuedAmount = "10000.000000";
+        var syndicateKP = StellarSdk.Keypair.random();
+        var newAccountKP = StellarSdk.Keypair.random();
+        var allTasks = "2048";
+        console.log("Creating new account for issuance " + syndicateKP.accountId());
+        accountHelper.createNewAccount(testHelper, syndicateKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0)
+            .then(() => assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), assetCode, assetPolicy))
+            .then(() => issuanceHelper.performPreIssuance(testHelper, syndicateKP, syndicateKP, assetCode, preIssuedAmount))
+            .then(() => accountHelper.createNewAccount(testHelper, newAccountKP.accountId(), StellarSdk.xdr.AccountType.general().value, 0))
+            .then(() => issuanceHelper.fundAccount(testHelper, newAccountKP, assetCode, syndicateKP, preIssuedAmount))
+            .then(() => accountHelper.loadBalanceForAsset(testHelper, newAccountKP.accountId(), assetCode))
+            .then(balance => {
+                expect(balance.balance).to.be.equal(preIssuedAmount);
+
+            })
+            // withdraw all the assets available with auto conversion to BTC
+            .then(() => {
+                let autoConversionAsset = "BTC" + Math.floor(Math.random() * 1000);
+                return assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), autoConversionAsset, 0)
+                    .then(() => assetHelper.createAssetPair(testHelper, assetCode, autoConversionAsset))
+                    .then(() => accountHelper.loadBalanceIDForAsset(testHelper, newAccountKP.accountId(), assetCode))
+                    .then(balanceID => {
+                        return withdrawHelper.withdraw(testHelper, newAccountKP, balanceID, preIssuedAmount, autoConversionAsset, allTasks);
+                    })
+                    .then(requestID => {
+                        return reviewableRequestHelper.reviewWithdrawRequest(testHelper, requestID, syndicateKP, StellarSdk.xdr.ReviewRequestOpAction.approve().value,
+                            "", {two_step_details: "Updated external details"}).then(() => {
+                            return reviewableRequestHelper.reviewWithdrawRequest(testHelper, requestID, syndicateKP, StellarSdk.xdr.ReviewRequestOpAction.approve().value,
+                                "", {one_step_withdrawal: "Updated external details"}, StellarSdk.xdr.ReviewableRequestType.withdraw().value);
+                        });
+                    });
+            })
+            .then(() => done())
+            .catch(err => {
+                done(err);
+            });
+    });
 
     it("New issuance flow", function (done) {
         let assetCode = "BTC" + Math.floor(Math.random() * 1000);
