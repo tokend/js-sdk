@@ -1,9 +1,11 @@
 var reviewableRequestHelper = require('./review_request')
 const StellarSdk = require('../../lib/index');
+const MAX_INT64_AMOUNT = '9223372036854.775807';
 
-
-function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy = 0, maxIssuanceAmount = "100000000",
-                                    initialPreissuedAmount = "0", expirationDate) {
+function createAssetCreationRequest(testHelper, owner, issuer, assetCode,
+                                    policy = 0, maxIssuanceAmount = "100000000",
+                                    initialPreissuedAmount = "0", expirationDate = MAX_INT64_AMOUNT,
+                                    trailingDigitsCount = "6") {
     console.log(assetCode, maxIssuanceAmount)
     let opts = {
         requestID: "0",
@@ -20,13 +22,15 @@ function createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy
                 type: "logo_type",
             },
         },
-        expirationDate: expirationDate
+        expirationDate: expirationDate,
+        trailingDigitsCount: trailingDigitsCount,
     };
     let operation = StellarSdk.ManageAssetBuilder.assetCreationRequest(opts);
     return testHelper.server.submitOperationGroup([operation], owner.accountId(), owner);
 }
 
-function createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy = 0) {
+function createAssetUpdateRequest(testHelper, owner, issuer, assetCode,
+                                  policy = 0, expirationDate = MAX_INT64_AMOUNT) {
     let opts = {
         requestID: "0",
         code: assetCode,
@@ -39,16 +43,16 @@ function createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy =
                 type: "logo_type",
             },
         },
-
+        expirationDate: expirationDate,
     };
     let operation = StellarSdk.ManageAssetBuilder.assetUpdateRequest(opts);
     return testHelper.server.submitOperationGroup([operation], owner.accountId(), owner);
 }
 
-function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount, initialPreissuedAmount = "0",
-                     expirationDate) {
-    return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount,
-        initialPreissuedAmount, expirationDate)
+function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount,
+                     initialPreissuedAmount = "0", expirationDate = MAX_INT64_AMOUNT, trailingDigitsCount = "6") {
+    return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy,
+      maxIssuanceAmount, initialPreissuedAmount, expirationDate, trailingDigitsCount)
         .then(response => {
             var result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
             var success = result.result().results()[0].tr().manageAssetResult().success()
@@ -64,8 +68,8 @@ function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAm
         });
 }
 
-function updateAsset(testHelper, owner, issuer, assetCode, policy) {
-    return createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy)
+function updateAsset(testHelper, owner, issuer, assetCode, policy, expirationDate = MAX_INT64_AMOUNT) {
+    return createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy, expirationDate)
         .then(response => {
             var result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
             var success = result.result().results()[0].tr().manageAssetResult().success()
