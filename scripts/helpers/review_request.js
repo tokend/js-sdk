@@ -1,18 +1,6 @@
-import isEqual from "lodash/isEqual";
-
 const isUndefined = require('lodash/isUndefined');
 const StellarSdk = require('../../lib/index');
 
-
-function loadNotPendingRequest(testHelper, requestID, reviewerKP, requestType) {
-    return loadRequestWithRetry(testHelper, requestID, reviewerKP, requestType)
-        .then(response => {
-            if (isEqual(response.request_state, "pending")) {
-                return loadNotPendingRequest(testHelper, requestID, reviewerKP, requestType);
-            }
-            return response;
-        });
-}
 
 function loadRequestWithRetry (testHelper, requestID, reviewerKP, requestType) {
     let callBuilder = testHelper.server.reviewableRequestsHelper().request().reviewableRequest(requestID);
@@ -222,7 +210,6 @@ function reviewContractRequest(testHelper, requestID, reviewerKP, action, reject
 }
 
 module.exports = {
-    loadNotPendingRequest,
     loadRequestWithRetry,
     reviewRequest,
     reviewWithdrawRequest,

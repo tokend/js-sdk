@@ -5,7 +5,6 @@ const issuance = require('./issuance')
 const withdraw = require('./withdraw')
 const sale = require('./sale')
 const offer = require('./offer')
-const payout = require('./payout');
 const tx = require('./transactions')
 const delay = require('./delay')
 
@@ -32,7 +31,6 @@ module.exports = {
     createWithdrawRequest: withdraw,
     sale,
     offer,
-    payout,
     tx,
     delay
 }

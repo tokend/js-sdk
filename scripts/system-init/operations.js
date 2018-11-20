@@ -30,11 +30,15 @@ const accounts = [
 const baseAssetPolicy = StellarSdk.xdr.AssetPolicy.baseAsset().value | StellarSdk.xdr.AssetPolicy.withdrawable().value | StellarSdk.xdr.AssetPolicy.twoStepWithdrawal().value;
 
 const tokensForIssuance = [
+    {code: 'SUN', policy: 0, maxAmount: "0", amount: "0", emit: "0", issuer: "GBKCQ3JTQI652LHNB3YRR75K3CXQFQ77T7MOMG47NJ6PREIVJ26VWU6L"},
     {code: 'BTC', policy: baseAssetPolicy, maxAmount: "9223372036854.775807", amount: '0', emit: '0', issuer: "GBKCQ3JTQI652LHNB3YRR75K3CXQFQ77T7MOMG47NJ6PREIVJ26VWU6L"},
     {code: 'ETH', policy: baseAssetPolicy, maxAmount: "9223372036854.775807", amount: '0', emit: '0', issuer: "GBKCQ3JTQI652LHNB3YRR75K3CXQFQ77T7MOMG47NJ6PREIVJ26VWU6L"},
 ]
 
-const assetPairs = []
+const assetPairs = [
+    {base: 'BTC', quote: 'SUN', policy: 0, price: "11583.44"},
+    {base: 'ETH', quote: 'SUN', policy: 0, price: "1228.77"},
+]
 
 module.exports = {
     createAssets: () => {

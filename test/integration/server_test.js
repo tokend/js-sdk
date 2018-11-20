@@ -7,7 +7,6 @@ import * as withdrawHelper from '../../scripts/helpers/withdraw'
 import * as saleHelper from '../../scripts/helpers/sale'
 import * as offerHelper from '../../scripts/helpers/offer'
 import * as limitsUpdateHelper from '../../scripts/helpers/limits_update'
-import * as payoutHelper from '../../scripts/helpers/payout'
 import * as manageKeyValueHelper from '../../scripts/helpers/key_value'
 import * as manageExternalSystemAccountIdPoolEntryHelper
     from '../../scripts/helpers/manage_external_system_account_id_pool_entry'
@@ -18,8 +17,8 @@ import * as paymentV2Helper from '../../scripts/helpers/payment_v2'
 import * as manageLimitsHelper from '../../scripts/helpers/manage_limits'
 import * as manageInvoiceRequestHelper from '../../scripts/helpers/invoice'
 import * as contractHelper from '../../scripts/helpers/contract'
+import * as atomicSwapHelper from '../../scripts/helpers/atomic_swap'
 import * as helpers from '../../scripts/helpers'
-
 let config = require('../../scripts/config');
 
 const MAX_INT64_AMOUNT = '9223372036854.775807';
@@ -80,6 +79,62 @@ describe("Integration test", function () {
             .catch(err => {
                 done(err)
             });
+    });
+
+    it("Create atomic swap bid", function (done) {
+        let baseAsset = "DL1TICKETS" + Math.floor(Math.random() * 1000);
+        let firstQuoteAsset = "XRP" + Math.floor(Math.random() * 1000);
+        let secondQuoteAsset = "LTC" + Math.floor(Math.random() * 1000);
+        let quoteAssets = [{asset: firstQuoteAsset, price: "10"}, {asset: secondQuoteAsset, price: "20"}];
+        let details = {"data" : "some random details"};
+        let preIssuedAmount = "10000.000000";
+        let sellerKP = StellarSdk.Keypair.random();
+        let firstBuyerKP = StellarSdk.Keypair.random();
+        let secondBuyerKP = StellarSdk.Keypair.random();
+        let atomicSwapKey = "atomic_swap_tasks";
+        let bidID;
+        let balanceID;
+        let canceledBidID;
+        accountHelper.createNewAccount(testHelper, sellerKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0)
+            .then(() => accountHelper.createNewAccount(testHelper, firstBuyerKP.accountId(), StellarSdk.xdr.AccountType.verified().value, 0))
+            .then(() => accountHelper.createNewAccount(testHelper, secondBuyerKP.accountId(), StellarSdk.xdr.AccountType.notVerified().value, 0))
+            .then(() => assetHelper.createAsset(testHelper, sellerKP, sellerKP.accountId(), baseAsset,
+                StellarSdk.xdr.AssetPolicy.canBeBaseInAtomicSwap().value))
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), firstQuoteAsset,
+                StellarSdk.xdr.AssetPolicy.canBeQuoteInAtomicSwap().value))
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), secondQuoteAsset,
+                StellarSdk.xdr.AssetPolicy.canBeQuoteInAtomicSwap().value))
+            .then(() => issuanceHelper.performPreIssuance(testHelper, sellerKP, sellerKP, baseAsset, preIssuedAmount))
+            .then(() => issuanceHelper.fundAccount(testHelper, sellerKP, baseAsset, sellerKP, preIssuedAmount))
+            .then(() => manageKeyValueHelper.putKeyValue(testHelper, testHelper.master, atomicSwapKey, "1", StellarSdk.xdr.KeyValueEntryType.uint32().value))
+            .then(() => accountHelper.loadBalanceIDForAsset(testHelper, sellerKP.accountId(), baseAsset))
+            .then(localBalanceID => {
+                balanceID = localBalanceID;
+                return atomicSwapHelper.createASwapBidCreationRequest(testHelper, sellerKP, balanceID, "1234", quoteAssets, details);
+            })
+            //.then(requestID => reviewableRequestHelper.reviewRequest(testHelper, requestID, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, ""))
+            .then(response => {
+                //let result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
+                // FIXME: remove hardcoded bid ID
+                canceledBidID = '1'; // result.result().results()[0].tr().reviewRequestResult().success().ext().extendedResult().typeExt().aSwapBidExtended().bidId().toString();
+                console.log("BidID: " + canceledBidID);
+                return atomicSwapHelper.createASwapRequest(testHelper, firstBuyerKP, canceledBidID, "5", firstQuoteAsset);
+            })
+            .then(() => atomicSwapHelper.cancelASwapBid(testHelper, sellerKP, canceledBidID))
+            .then(() => atomicSwapHelper.createASwapBidCreationRequest(testHelper, sellerKP, balanceID, "10", quoteAssets, details))
+            //.then(requestID => reviewableRequestHelper.reviewRequest(testHelper, requestID, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, ""))
+            .then(response => {
+                //let result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
+                // FIXME: remove hardcoded bid ID
+                bidID = '2';// result.result().results()[0].tr().reviewRequestResult().success().ext().extendedResult().typeExt().aSwapBidExtended().bidId().toString();
+                console.log("BidID: " + bidID);
+                return atomicSwapHelper.createASwapRequest(testHelper, firstBuyerKP, bidID, "8", firstQuoteAsset);
+            })
+            .then(requestID => reviewableRequestHelper.reviewRequest(testHelper, requestID, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, "",undefined, 0, 1))
+            .then(() => atomicSwapHelper.createASwapRequest(testHelper, secondBuyerKP, bidID, "2", secondQuoteAsset))
+            .then(requestID => reviewableRequestHelper.reviewRequest(testHelper, requestID, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, "", undefined, 0, 1))
+            .then(() => done())
+            .catch(helpers.errorHandler);
     });
 
     it("Create and withdraw asset", function (done) {
@@ -218,7 +273,9 @@ describe("Integration test", function () {
             .then(tx => {
                 helpers.tx.waitForTX(testHelper, tx.hash);
             })
-            .then(()=> reviewableRequestHelper.loadNotPendingRequest(testHelper, issuanceRequestID.toString(), syndicateKP))
+            .then(()=> {
+                return reviewableRequestHelper.loadRequestWithRetry(testHelper, issuanceRequestID.toString(), syndicateKP);
+            })
             .then(response => {
                 expect(response.request_state).to.be.equal("approved");
             })
@@ -257,7 +314,9 @@ describe("Integration test", function () {
             .then(tx => {
                 helpers.tx.waitForTX(testHelper, tx.hash);
             })
-            .then(()=> reviewableRequestHelper.loadNotPendingRequest(testHelper, issuanceRequestID.toString(), syndicateKP))
+            .then(()=> {
+                return reviewableRequestHelper.loadRequestWithRetry(testHelper, issuanceRequestID.toString(), syndicateKP);
+            })
             .then(response => {
                 expect(response.request_state).to.be.equal("permanently_rejected");
             })
@@ -721,7 +780,7 @@ describe("Integration test", function () {
             .then(() => done())
             .catch(err => {
                 done(err);
-            });
+            })
     });
 
     it("Create KYC request and change KYC", function (done) {
@@ -1052,45 +1111,5 @@ describe("Integration test", function () {
                 console.log(err);
                 done(err);
             });
-    });
-
-    it("Perform payout", function (done) {
-        let syndicateKP = StellarSdk.Keypair.random();
-        let otherSyndicateKP = StellarSdk.Keypair.random();
-        let assetCode = "XRP" + Math.floor(Math.random() * 10000);
-        let otherAssetCode = "LTC" + Math.floor(Math.random() * 10000);
-        let assetPolicy = StellarSdk.xdr.AssetPolicy.transferable().value;
-        let maxIssuanceAmount = 2000;
-        let preIssuedAmount = maxIssuanceAmount / 2;
-
-        // holders
-        let holder1KP = StellarSdk.Keypair.random();
-        let holder2KP = StellarSdk.Keypair.random();
-        let holder3KP = StellarSdk.Keypair.random();
-        let holder4KP = StellarSdk.Keypair.random();
-
-        accountHelper.createNewAccount(testHelper, syndicateKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0)
-            .then(() => accountHelper.createNewAccount(testHelper, holder3KP.accountId(), StellarSdk.xdr.AccountType.verified().value, 0))
-            .then(() => accountHelper.createNewAccount(testHelper, holder4KP.accountId(), StellarSdk.xdr.AccountType.notVerified().value, 0))
-            .then(() => accountHelper.createNewAccount(testHelper, holder1KP.accountId(), StellarSdk.xdr.AccountType.general().value, 0))
-            .then(() => accountHelper.createNewAccount(testHelper, holder2KP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0))
-            .then(() => assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), assetCode, assetPolicy,
-                maxIssuanceAmount.toString(), preIssuedAmount.toString()))
-            .then(() => issuanceHelper.fundAccount(testHelper, syndicateKP, assetCode, syndicateKP, "500"))
-            .then(() => issuanceHelper.fundAccount(testHelper, holder3KP, assetCode, syndicateKP, "0.1"))
-            .then(() => issuanceHelper.fundAccount(testHelper, holder4KP, assetCode, syndicateKP, "0.9"))
-            .then(() => issuanceHelper.fundAccount(testHelper, holder1KP, assetCode, syndicateKP, "100"))
-            .then(() => issuanceHelper.fundAccount(testHelper, holder2KP, assetCode, syndicateKP, "200"))
-            .then(() => accountHelper.loadBalanceIDForAsset(testHelper, syndicateKP.accountId(), assetCode))
-            .then(balanceID => payoutHelper.performPayout(testHelper, syndicateKP, assetCode, balanceID, "100"))
-            .then(() => accountHelper.createNewAccount(testHelper, otherSyndicateKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0))
-            .then(() => assetHelper.createAsset(testHelper, otherSyndicateKP, otherSyndicateKP.accountId(), otherAssetCode, assetPolicy,
-                maxIssuanceAmount.toString(), preIssuedAmount.toString()))
-            .then(() => issuanceHelper.fundAccount(testHelper, syndicateKP, otherAssetCode, otherSyndicateKP, "1000"))
-            .then(() => feesHelper.setFees(testHelper, StellarSdk.xdr.FeeType.payoutFee(), "10", "10", otherAssetCode))
-            .then(() => accountHelper.loadBalanceIDForAsset(testHelper, syndicateKP.accountId(), otherAssetCode))
-            .then(balanceID => payoutHelper.performPayout(testHelper, syndicateKP, assetCode, balanceID, "500", "1", "1", "10", "50"))
-            .then(() => done())
-            .catch(helpers.errorHandler);
     });
 });

@@ -2,6 +2,7 @@ import { AccountCallBuilder } from "./account_call_builder";
 import { AccountResponse } from "./account_response";
 import { AssetCallBuilder } from "./asset_call_builder";
 import { AssetPairCallBuilder } from "./asset_pair_call_builder";
+import { AtomicSwapBidCallBuilder } from './atomic_swap_bid_call_builder';
 import { BalanceCallBuilder } from "./balance_call_builder";
 import { ContactsCallBuilder } from "./contacts_call_builder";
 import { ContactRequestCallBuilder } from './contact_request_call_builder';
@@ -105,14 +106,12 @@ export class Server {
      * @param {Base.Keypair} signerKP - The keypair of the source account signer.
      * @return {Promise}
      */
-    submitOperationGroup (operations, sourceID, signerKP, maxTotalFee) {
+    submitOperationGroup (operations, sourceID, signerKP, maxTotalFee='0') {
       const source = new stellarBase.Account(sourceID);
       const transactionBuilder = new stellarBase.TransactionBuilder(source);
       operations
           .forEach(operation => transactionBuilder.addOperation(operation));
-      if (maxTotalFee) {
-        transactionBuilder.addMaxTotalFee(maxTotalFee);
-      }
+      transactionBuilder.addMaxTotalFee(maxTotalFee);
       const transaction = transactionBuilder.build();
       transaction.sign(signerKP);
       return this.submitTransaction(transaction);
@@ -195,6 +194,10 @@ export class Server {
      */
     accounts() {
         return new AccountCallBuilder(URI(this.serverURL));
+    }
+
+    atomic_swap_bids() {
+        return new AtomicSwapBidCallBuilder(URI(this.serverURL));
     }
 
     /**
