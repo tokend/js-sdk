@@ -1,10 +1,10 @@
 var reviewableRequestHelper = require('./review_request')
 const StellarSdk = require('../../lib/index');
-const MAX_INT64_AMOUNT = '9223372036854.775807';
+const MAX_INT64 = '9223372036854775807';
 
 function createAssetCreationRequest(testHelper, owner, issuer, assetCode,
                                     policy = 0, maxIssuanceAmount = "100000000",
-                                    initialPreissuedAmount = "0", expirationDate = MAX_INT64_AMOUNT,
+                                    initialPreissuedAmount = "0", expirationDate = MAX_INT64,
                                     trailingDigitsCount = "6") {
     console.log(assetCode, maxIssuanceAmount)
     let opts = {
@@ -30,7 +30,7 @@ function createAssetCreationRequest(testHelper, owner, issuer, assetCode,
 }
 
 function createAssetUpdateRequest(testHelper, owner, issuer, assetCode,
-                                  policy = 0, expirationDate = MAX_INT64_AMOUNT) {
+                                  policy = 0, expirationDate = MAX_INT64) {
     let opts = {
         requestID: "0",
         code: assetCode,
@@ -50,7 +50,7 @@ function createAssetUpdateRequest(testHelper, owner, issuer, assetCode,
 }
 
 function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAmount,
-                     initialPreissuedAmount = "0", expirationDate = MAX_INT64_AMOUNT, trailingDigitsCount = "6") {
+                     initialPreissuedAmount = "0", expirationDate = MAX_INT64, trailingDigitsCount = "6") {
     return createAssetCreationRequest(testHelper, owner, issuer, assetCode, policy,
       maxIssuanceAmount, initialPreissuedAmount, expirationDate, trailingDigitsCount)
         .then(response => {
@@ -68,7 +68,7 @@ function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAm
         });
 }
 
-function updateAsset(testHelper, owner, issuer, assetCode, policy, expirationDate = MAX_INT64_AMOUNT) {
+function updateAsset(testHelper, owner, issuer, assetCode, policy, expirationDate = MAX_INT64) {
     return createAssetUpdateRequest(testHelper, owner, issuer, assetCode, policy, expirationDate)
         .then(response => {
             var result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
