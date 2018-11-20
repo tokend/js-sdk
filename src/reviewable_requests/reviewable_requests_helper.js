@@ -1,3 +1,5 @@
+import { AtomicSwapBidCreationRequestsCallBuilder } from './atomic_swap_bid_requests_call_builder';
+import { AtomicSwapRequestsCallBuilder } from './atomic_swap_requests_call_builder';
 import {AssetRequestsCallBuilder} from "./asset_requests_call_builder";
 import {PreissuanceRequestsCallBuilder} from "./preissuance_requests_call_builder";
 import {IssuanceRequestsCallBuilder} from "./issuance_requests_call_builder";
@@ -120,5 +122,13 @@ export class ReviewableRequestsHelper {
      */
     invoices() {
         return new InvoiceRequestsCallBuilder(URI(this.serverURL));
+    }
+
+    atomic_swap_bids () {
+        return new AtomicSwapBidCreationRequestsCallBuilder(URI(this.serverURL));
+    }
+
+    atomic_swaps () {
+        return new AtomicSwapRequestsCallBuilder(URI(this.serverURL));
     }
 }

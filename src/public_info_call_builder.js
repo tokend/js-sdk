@@ -16,16 +16,6 @@ export class PublicInfoCallBuilder extends CallBuilder {
         return this;
     }
 
-    payments() {
-        this.filter.push(['public', 'payments']);
-        return this;
-    }
-
-    forAsset(asset) {
-        this.url.addQuery('asset', asset);
-        return this;
-    }
-
     ledgers() {
         this.filter.push(['public', 'ledgers']);
         return this;
