@@ -1133,7 +1133,7 @@ describe("Integration test", function () {
                 date = new Date();
                 let expirationDate = Math.floor(date.getTime() / 1000 + 135);
                 console.log("Create investment token: " + Math.floor(date.getTime() / 1000));
-                assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), investmentToken, 0, amountToBeSold, amountToBeSold, expirationDate.toString())
+                return assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), investmentToken, 0, amountToBeSold, amountToBeSold, expirationDate.toString(), "0");
             })
             .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), quoteAssets[0].asset, 0, "1000", "1000"))
             .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), quoteAssets[1].asset, 0, "1000", "1000"))
