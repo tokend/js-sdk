@@ -7,8 +7,6 @@ import {ReviewableRequestCallBuilder} from "./reviewable_request_call_builder";
 import {LimitsUpdateRequestsCallBuilder} from "./limits_update_requests_call_builder";
 import {UpdateKYCRequestCallBuilder} from './update_kyc_requests_call_builder';
 import {UpdateSaleDetailsRequestCallBuilder} from './update_sale_details_requests_call_builder';
-import {ContractRequestsCallBuilder} from './contract_requests_call_builder';
-import {InvoiceRequestsCallBuilder} from './invoice_requests_call_builder';
 
 let URI = require("urijs");
 
@@ -104,21 +102,5 @@ export class ReviewableRequestsHelper {
      */
     update_sale_end_time() {
         return new UpdateSaleEndTimeRequestCallBuilder(URI(this.serverURL));
-    }
-
-    /**
-     * Returns new {@link ContractRequestsCallBuilder} object configured by a current Horizon server configuration.
-     * @returns {ContractRequestsCallBuilder}
-     */
-    contracts() {
-        return new ContractRequestsCallBuilder(URI(this.serverURL));
-    }
-
-    /**
-     * Returns new {@link InvoiceRequestsCallBuilder} object configured by a current Horizon server configuration.
-     * @returns {InvoiceRequestsCallBuilder}
-     */
-    invoices() {
-        return new InvoiceRequestsCallBuilder(URI(this.serverURL));
     }
 }

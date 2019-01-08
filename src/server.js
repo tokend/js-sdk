@@ -3,8 +3,6 @@ import { AccountResponse } from "./account_response";
 import { AssetCallBuilder } from "./asset_call_builder";
 import { AssetPairCallBuilder } from "./asset_pair_call_builder";
 import { BalanceCallBuilder } from "./balance_call_builder";
-import { ContactsCallBuilder } from "./contacts_call_builder";
-import { ContactRequestCallBuilder } from './contact_request_call_builder';
 import { DefaultLimitsCallBuilder } from "./default_limits_call_builder";
 import { DocumentCallBuilder } from "./document_call_builder";
 import { FeeCallBuilder } from "./fee_call_builder";
@@ -25,7 +23,6 @@ import { TransactionCallBuilder } from "./transaction_call_builder";
 import { UserCallBuilder } from "./user_call_builder";
 import { SalesCallBuilder } from "./sales_call_builder";
 import { SaleAntesCallBuilder } from "./sale_antes_call_builder";
-import { ContractCallBuilder } from "./contract_call_builder";
 import { Config } from "./config";
 import { ReviewableRequestsHelper } from "./reviewable_requests/reviewable_requests_helper";
 import { TimeSyncer } from './time-syncer';
@@ -203,22 +200,6 @@ export class Server {
      */
     keyValues() {
         return new KeyValueCallBuilder(URI(this.serverURL));
-    }
-
-    /**
-     * Returns new {@link ContactsCallBuilder} object configured by a current Horizon server configuration.
-     * @returns {ContactsCallBuilder}
-     */
-    contacts() {
-        return new ContactsCallBuilder(URI(this.serverURL));
-    }
-
-    /**
-     * Returns new {@link ContactRequestCallBuilder} object configured by a current Horizon server configuration.
-     * @returns {ContactRequestCallBuilder}
-     */
-    contactRequests() {
-        return new ContactRequestCallBuilder(URI(this.serverURL));
     }
 
     /**
@@ -403,14 +384,6 @@ export class Server {
      */
     documents() {
         return new DocumentCallBuilder(URI(this.serverURL));
-    }
-
-    /**
-     * Returns new {@link ContractCallBuilder} object configured with the current Horizon server configuration.
-     * @returns {ContractCallBuilder}
-     */
-    contracts() {
-        return new ContractCallBuilder(URI(this.serverURL));
     }
 
     /**
