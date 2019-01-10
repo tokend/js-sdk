@@ -25,10 +25,11 @@ function performPreIssuance(testHelper, assetOwnerKP, preIssuanceKP, assetCode, 
             return reviewableRequestHelper.reviewRequest(testHelper, id, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, "");
         })
         .then(res => {
-            console.log('PerformedPreIssuance: ', amount, assetCode)
+            console.log('PerformedPreIssuance: ', amount, assetCode);
             return res
         }).catch(err => {
-            console.log(err.response.data.extras)
+            console.log(err.response.data.extras);
+            throw err;
         });
 }
 

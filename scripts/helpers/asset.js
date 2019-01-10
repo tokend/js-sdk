@@ -53,7 +53,7 @@ function createAsset(testHelper, owner, issuer, assetCode, policy, maxIssuanceAm
                 return 'Asset created'
             }
             var id = success.requestId().toString();
-            return reviewableRequestHelper.reviewRequest(testHelper, id, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, "");
+            return reviewableRequestHelper.reviewRequest(testHelper, id, testHelper.master, StellarSdk.xdr.ReviewRequestOpAction.approve().value, "", undefined, 0, 1);
         }).then(res => {
             console.log(assetCode, ' <-- Asset successfully created');
             return res;

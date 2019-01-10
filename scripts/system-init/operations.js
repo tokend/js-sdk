@@ -27,7 +27,7 @@ const accounts = [
     },
 ]
 
-const baseAssetPolicy = StellarSdk.xdr.AssetPolicy.baseAsset().value | StellarSdk.xdr.AssetPolicy.withdrawable().value | StellarSdk.xdr.AssetPolicy.twoStepWithdrawal().value;
+const baseAssetPolicy = StellarSdk.xdr.AssetPolicy.baseAsset().value | StellarSdk.xdr.AssetPolicy.withdrawable().value;
 
 const tokensForIssuance = [
     {code: 'BTC', policy: baseAssetPolicy, maxAmount: "9223372036854.775807", amount: '0', emit: '0', issuer: "GBKCQ3JTQI652LHNB3YRR75K3CXQFQ77T7MOMG47NJ6PREIVJ26VWU6L"},

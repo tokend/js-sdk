@@ -1,3 +1,5 @@
+import { isUndefined } from 'util';
+
 let masterSeeds = require('./master_seeds');
 const StellarSdk = require('../lib/index');
 const _ = require('lodash');
@@ -36,6 +38,19 @@ const urls = {
 
 //env is one of the {'local', 'dev', 'staging'}
 
+function checkConnection(conf, done) {
+    conf.server.loadAccountWithSign(conf.master.accountId(), conf.master)
+        .then(source => {
+            console.log('Horizon up and running!');
+            done();
+        })
+        .catch(err => {
+            console.log(err);
+            console.log("Couldn't connect to Horizon... Trying again.");
+            setTimeout(() => checkConnection(conf, done), 20000);
+        });
+}
+
 module.exports = {
     getConfig: function (env) {
         const config = {
@@ -47,6 +62,15 @@ module.exports = {
             thresholds: {
                 master: 255,
                 high: 100,
+            },
+
+            handleError: function (err, done) {
+                if (!isUndefined(err.response)) {
+                    done(JSON.stringify(err.response.data));
+                    return;
+                }
+
+                done(err);
             }
         };
 
@@ -54,5 +78,18 @@ module.exports = {
         config.server = new StellarSdk.Server(config.url, { allowHttp: true });
 
         return config
-    }
+    },
+
+    getDefaultTestConfig: function (testCase) {
+        const TIMEOUT = 60 * 20000;
+        testCase.timeout(TIMEOUT);
+        testCase.slow(TIMEOUT / 2);
+
+        let testHelper = this.getConfig('local');
+        before(function (done) {
+            this.timeout(60 * 1000);
+            checkConnection(testHelper, done);
+        });
+        return testHelper;
+    },
 };

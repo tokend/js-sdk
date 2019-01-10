@@ -52,14 +52,16 @@ function reviewRequest(testHelper, requestID, reviewerKP, action, rejectReason, 
     });
 }
 
-function reviewWithdrawRequest(testHelper, requestID, reviewerKP, action, rejectReason, externalDetails, requestType) {
-    return loadRequestWithRetry(testHelper, requestID, reviewerKP, requestType).then(request => {
+function reviewWithdrawRequest(testHelper, requestID, reviewerKP, action, rejectReason, tasksToAdd, tasksToRemove, externalDetails) {
+    return loadRequestWithRetry(testHelper, requestID, reviewerKP, StellarSdk.xdr.ReviewableRequestType.withdraw().value).then(request => {
         let opts = {
             requestID: requestID,
             requestHash: request.hash,
             requestType: request.details.request_type_i,
             action: action,
             reason: rejectReason,
+            tasksToAdd: tasksToAdd,
+            tasksToRemove: tasksToRemove,
             externalDetails: externalDetails,
         };
         let operation = StellarSdk.ReviewRequestBuilder.reviewWithdrawRequest(opts);
