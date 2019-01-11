@@ -16,6 +16,15 @@ function waitForTX(testHelper, txhash) {
 
 }
 
+function submitWithWait(testHelper, ops, source, signerKP) {
+    return testHelper.server.submitOperationGroup(ops, source, signerKP).then(result => {
+        return waitForTX(testHelper, result.hash).then(() => {
+            return result;
+        });
+    });
+}
+
 module.exports = {
-    waitForTX
+    waitForTX,
+    submitWithWait
 };

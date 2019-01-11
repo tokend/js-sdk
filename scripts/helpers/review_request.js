@@ -1,7 +1,9 @@
 import isEqual from "lodash/isEqual";
+var txHelper = require('./transactions')
 
 const isUndefined = require('lodash/isUndefined');
 const StellarSdk = require('../../lib/index');
+
 
 
 function loadNotPendingRequest(testHelper, requestID, reviewerKP, requestType) {
@@ -42,7 +44,7 @@ function reviewRequest(testHelper, requestID, reviewerKP, action, rejectReason, 
             externalDetails: externalDetails
         };
         let operation = StellarSdk.ReviewRequestBuilder.reviewRequest(opts);
-        return testHelper.server.submitOperationGroup([operation], reviewerKP.accountId(), reviewerKP);
+        return txHelper.submitWithWait(testHelper, [operation], reviewerKP.accountId(), reviewerKP);
     }).catch(err => {
         if (!isUndefined(err.response) && err.response.status === 404) {
             console.log("received 404 - retrying");
