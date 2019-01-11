@@ -104,49 +104,4 @@ describe("Issuance tests", function () {
                 done(err);
             });
     });
-
-    it("Issue with deposit limits", function (done) {
-        let assetCode = testHelper.generateAssetCode("BTC");
-        let assetPolicy = StellarSdk.xdr.AssetPolicy.transferable().value;
-        let amountToIssue = "100.000000";
-        let syndicateKP = StellarSdk.Keypair.random();
-
-        let issuanceRequestID;
-        var newLimits = {
-            accountID: syndicateKP.accountId(),
-            statsOpType: 4,
-            assetCode: assetCode,
-            isConvertNeeded: false,
-            dailyOut: "1000.000000",
-            weeklyOut: "2000.000000",
-            monthlyOut: "3000.000000",
-            annualOut: "5000.000000"
-        };
-        var limitsV2EntryID;
-
-        accountHelper.createNewAccount(testHelper, syndicateKP.accountId(), StellarSdk.xdr.AccountType.syndicate().value, 0)
-            .then(() => assetHelper.createAsset(testHelper, syndicateKP, syndicateKP.accountId(), assetCode, assetPolicy))
-            .then(() => manageLimitsHelper.createLimits(testHelper, testHelper.master, assetCode, syndicateKP.accountId()))
-            .then(id => {
-                limitsV2EntryID = id;
-                return limitsUpdateHelper.createLimitsUpdateRequest(testHelper, syndicateKP, { "data": "Some details" }, "0");
-            })
-            .then(requestID => {
-                newLimits.id = limitsV2EntryID;
-                return reviewableRequestHelper.reviewLimitsUpdateRequest(testHelper, requestID, master, StellarSdk.xdr.ReviewRequestOpAction.approve().value,
-                    "", newLimits);
-            })
-            .then(() => issuanceHelper.performPreIssuance(testHelper, syndicateKP, syndicateKP, assetCode, amountToIssue))
-            .then(() => accountHelper.loadBalanceIDForAsset(testHelper, syndicateKP.accountId(), assetCode))
-            .then(balanceID => issuanceHelper.createIssuanceRequest(testHelper, syndicateKP, balanceID, assetCode, amountToIssue, 24))
-            .then(newIssuanceRequestID => {
-                issuanceRequestID = newIssuanceRequestID;
-                reviewableRequestHelper.reviewRequest(testHelper, issuanceRequestID.toString(), syndicateKP,
-                    StellarSdk.xdr.ReviewRequestOpAction.approve().value, "", undefined, 0, 24);
-            })
-            .then(() => done())
-            .catch(err => {
-                testHelper.handleError(err, done);
-            });
-    });
 });
