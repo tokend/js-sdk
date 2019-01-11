@@ -71,6 +71,10 @@ module.exports = {
                 }
 
                 done(err);
+            },
+
+            generateAssetCode: function(prefix) {
+                return prefix + Math.floor(Math.random() * 100000);
             }
         };
 

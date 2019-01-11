@@ -45,10 +45,10 @@ function createIssuanceRequest(testHelper, requestor, receiverBalanceID, asset, 
     };
 
     const op = StellarSdk.CreateIssuanceRequestBuilder.createIssuanceRequest(opts);
-    return testHelper.server.submitOperation(op, requestor.accountId(), requestor)
+    return testHelper.server.submitOperationGroup([op], requestor.accountId(), requestor)
         .then(response => {
             let result = StellarSdk.xdr.TransactionResult.fromXDR(new Buffer(response.result_xdr, "base64"));
-            let requestID = result.result().results()[0].tr().createIssuanceRequestResult().success().requestId();
+            let requestID = result.result().results()[0].tr().createIssuanceRequestResult().success().requestId().toString();
             console.log('Issuance request created: ' + requestID);
             return requestID;
         });
