@@ -7,11 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 Please check our [developers guide](https://gitlab.com/tokend/developers-guide)
 for further information about branching and tagging conventions.
 
-## [Unreleased]
+## [1.0.1] - 2019-02-18
 ### Changed
 - Freeze dependencies versions
 
 ## [1.0.0] - 2018-12-04
 
-[Unreleased]: https://github.com/tokend/js-sdk/compare/1.0.0...HEAD
+[1.0.1]: https://github.com/tokend/js-sdk/compare/1.0.0...1.0.1
 [1.0.0]: https://github.com/tokend/js-sdk/releases/tag/1.0.0
