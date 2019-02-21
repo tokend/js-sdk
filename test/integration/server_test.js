@@ -7,6 +7,7 @@ import * as withdrawHelper from '../../scripts/helpers/withdraw'
 import * as saleHelper from '../../scripts/helpers/sale'
 import * as investmentTokenSaleHelper from '../../scripts/helpers/investment_token_sale';
 import * as offerHelper from '../../scripts/helpers/offer'
+import * as orderHelper from '../../scripts/helpers/market_order'
 import * as limitsUpdateHelper from '../../scripts/helpers/limits_update'
 import * as payoutHelper from '../../scripts/helpers/payout'
 import * as manageKeyValueHelper from '../../scripts/helpers/key_value'
@@ -1205,4 +1206,31 @@ describe("Integration test", function () {
             .then(() => done())
             .catch(helpers.errorHandler);
     });
+
+    it("Market order partially matched", function (done) {
+        let buyerKP = StellarSdk.Keypair.random();
+        let sellerKP = StellarSdk.Keypair.random();
+        let baseAsset = "USD" + Math.floor(Math.random() * 1000);
+        let quoteAsset = "UAH" + Math.floor(Math.random() * 1000);
+        let baseMaxIssuanceAmount = 101;
+        let quoteMaxIssuanceAmount = 2601;
+
+
+        assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), baseAsset, StellarSdk.xdr.AssetPolicy.baseAsset().value,
+            baseMaxIssuanceAmount.toString(), baseMaxIssuanceAmount.toString())
+            .then(() => assetHelper.createAsset(testHelper, testHelper.master, testHelper.master.accountId(), quoteAsset, StellarSdk.xdr.AssetPolicy.baseAsset().value,
+                quoteMaxIssuanceAmount.toString(), quoteMaxIssuanceAmount.toString()))
+            // 9 is tradableSecondaryMarket and strategyFifo
+            .then(() => assetHelper.createAssetPair(testHelper, baseAsset, quoteAsset, "26", 9 ))
+            .then(() => accountHelper.createNewAccount(testHelper, sellerKP.accountId(), StellarSdk.xdr.AccountType.general().value, 0))
+            .then(() => accountHelper.createNewAccount(testHelper, buyerKP.accountId(), StellarSdk.xdr.AccountType.general().value, 0))
+            .then(() => issuanceHelper.fundAccount(testHelper, sellerKP, baseAsset, testHelper.master, baseMaxIssuanceAmount.toString()))
+            .then(() => issuanceHelper.fundAccount(testHelper, buyerKP, quoteAsset, testHelper.master, quoteMaxIssuanceAmount.toString()))
+            .then(() => offerHelper.createOffer(testHelper, sellerKP, baseAsset, quoteAsset, "26", "30", false))
+            .then(() => offerHelper.createOffer(testHelper, sellerKP, baseAsset, quoteAsset, "26", "50", false))
+            .then(() => orderHelper.createOrder(testHelper, buyerKP, baseAsset, quoteAsset, "100", true))
+            .then(() => done())
+            .catch(err => done(err));
+    })
+
 });
