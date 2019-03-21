@@ -1,4 +1,4 @@
-# DEPRECATED NOTICE
+# DEPRECATION NOTICE
 
 We introduced new sdk that merge [js-sdk](https://github.com/tokend/js-sdk) and [js-base](https://github.com/tokend/js-base). Also the new package has more tools to work with up to date Horizon and Api servers. The current repo is fully deprecated, it is absolutely incompatible with the current system and are not going to be updated. Use this repo instead: [https://github.com/tokend/new-js-sdk](https://github.com/tokend/new-js-sdk)
 
